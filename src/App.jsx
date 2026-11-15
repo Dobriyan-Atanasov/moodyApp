@@ -6,7 +6,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import HomeScreen from './screens/HomeScreen';
+
+import MainTabs from './navigation/MainTabs';
 import ProductDetailsScreen from './screens/ProductDetailsScreen';
 
 import '@/global.css';
@@ -22,8 +23,8 @@ export default function App() {
 
           <Stack.Navigator>
             <Stack.Screen
-              name="Home"
-              component={HomeScreen}
+              name="MainTabs"
+              component={MainTabs}
               options={{ title: 'MoodyApp' }}
             />
 
