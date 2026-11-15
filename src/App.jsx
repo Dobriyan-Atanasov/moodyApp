@@ -25,7 +25,7 @@ export default function App() {
             <Stack.Screen
               name="MainTabs"
               component={MainTabs}
-              options={{ title: 'MoodyApp' }}
+              options={{ headerShown: false }}
             />
 
             <Stack.Screen
