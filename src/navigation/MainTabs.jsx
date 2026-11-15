@@ -1,7 +1,6 @@
 
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@react-native-vector-icons/ionicons';
-
 import HomeScreen from '../screens/HomeScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -13,8 +12,12 @@ export default function MainTabs() {
         <Tab.Navigator
             screenOptions={({ route }) => ({
                 headerShown: true,
-                tabBarActiveTintColor: '#b87809',
-                tabBarInactiveTintColor: '#a4a7ac',
+                tabBarActiveTintColor: '#92600C',
+                tabBarInactiveTintColor: '#777B83',
+                tabBarStyle: {
+                    backgroundColor: '#FAF8F5',
+                    borderTopColor: '#E8E3DC',
+                },
 
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName;
