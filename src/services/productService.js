@@ -65,3 +65,37 @@ export async function createProduct(title, description, price, category, userId)
 
     return data[0];
 }
+
+export async function getMyProducts(userId) {
+    const token = await getAccessToken();
+
+    if (!token) {
+        throw new Error('You must be logged in to view your listings.');
+    }
+
+    const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/products?select=*,product_images(storage_path,display_order)&user_id=eq.${encodeURIComponent(userId)}&order=created_at.desc`,
+        {
+            headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to fetch your listings.');
+    }
+
+    const products = await response.json();
+
+    return products.map((product) => ({
+        ...product,
+        images: [...(product.product_images || [])]
+            .sort((a, b) => a.display_order - b.display_order)
+            .map((image) =>
+                `${SUPABASE_URL}/storage/v1/object/public/product-images/${image.storage_path}`
+            ),
+    }));
+}

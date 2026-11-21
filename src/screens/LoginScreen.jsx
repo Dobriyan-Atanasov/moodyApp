@@ -30,7 +30,7 @@ export default function LoginScreen({ navigation }) {
             await login(email.trim(), password);
 
             Alert.alert('Success', 'You are logged in!');
-            navigation.goBack();
+            navigation.popTo('MainTabs', { screen: 'Home' });
         } catch (error) {
             Alert.alert('Login failed', error.message);
         } finally {

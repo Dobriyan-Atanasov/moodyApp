@@ -28,19 +28,21 @@ export default function ProductCard({ product, onPress, isFavorite = false, onTo
                     </View>
                 )}
 
-                <Pressable
-                    style={styles.favoriteButton}
-                    onPress={(event) => {
-                        event.stopPropagation();
-                        onToggleFavorite?.();
-                    }}
-                >
-                    <Ionicons
-                        name={isFavorite ? 'heart' : 'heart-outline'}
-                        size={23}
-                        color={isFavorite ? '#E5484D' : '#171717'}
-                    />
-                </Pressable>
+                {onToggleFavorite && (
+                    <Pressable
+                        style={styles.favoriteButton}
+                        onPress={(event) => {
+                            event.stopPropagation();
+                            onToggleFavorite();
+                        }}
+                    >
+                        <Ionicons
+                            name={isFavorite ? 'heart' : 'heart-outline'}
+                            size={23}
+                            color={isFavorite ? '#E5484D' : '#171717'}
+                        />
+                    </Pressable>
+                )}
             </View>
 
             <View style={styles.cardDetails}>
