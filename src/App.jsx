@@ -10,6 +10,12 @@ import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import MainTabs from './navigation/MainTabs';
 import ProductDetailsScreen from './screens/ProductDetailsScreen';
 
+import ProductCreateScreen from './screens/ProductCreateScreen';
+
+import RegisterScreen from './screens/RegisterScreen';
+
+import LoginScreen from './screens/LoginScreen';
+
 import '@/global.css';
 
 const Stack = createNativeStackNavigator();
@@ -33,6 +39,25 @@ export default function App() {
               component={ProductDetailsScreen}
               options={{ title: 'Product Details' }}
             />
+
+            <Stack.Screen
+              name="ProductCreate"
+              component={ProductCreateScreen}
+              options={{ title: 'Create Product' }}
+            />
+
+            <Stack.Screen
+              name="Register"
+              component={RegisterScreen}
+              options={{ title: 'Register' }}
+            />
+
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{ title: 'Login' }}
+            />
+
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaProvider>
