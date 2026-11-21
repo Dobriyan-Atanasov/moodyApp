@@ -9,9 +9,11 @@ import {
     StyleSheet,
 } from 'react-native';
 
-import { loginUser } from '../services/authService';
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
+    const { login } = useAuth();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -25,9 +27,7 @@ export default function LoginScreen({ navigation }) {
         setLoading(true);
 
         try {
-            const data = await loginUser(email.trim(), password);
-
-            console.log('Login successful:', data.user?.email);
+            await login(email.trim(), password);
 
             Alert.alert('Success', 'You are logged in!');
             navigation.goBack();

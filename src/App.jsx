@@ -16,6 +16,8 @@ import RegisterScreen from './screens/RegisterScreen';
 
 import LoginScreen from './screens/LoginScreen';
 
+import { AuthProvider } from './context/AuthContext';
+
 import '@/global.css';
 
 const Stack = createNativeStackNavigator();
@@ -24,42 +26,44 @@ export default function App() {
   return (
     <GluestackUIProvider mode="light">
       <SafeAreaProvider>
-        <NavigationContainer>
-          <StatusBar barStyle="dark-content" />
+        <AuthProvider>
+          <NavigationContainer>
+            <StatusBar barStyle="dark-content" />
 
-          <Stack.Navigator>
-            <Stack.Screen
-              name="MainTabs"
-              component={MainTabs}
-              options={{ headerShown: false }}
-            />
+            <Stack.Navigator>
+              <Stack.Screen
+                name="MainTabs"
+                component={MainTabs}
+                options={{ headerShown: false }}
+              />
 
-            <Stack.Screen
-              name="ProductDetails"
-              component={ProductDetailsScreen}
-              options={{ title: 'Product Details' }}
-            />
+              <Stack.Screen
+                name="ProductDetails"
+                component={ProductDetailsScreen}
+                options={{ title: 'Product Details' }}
+              />
 
-            <Stack.Screen
-              name="ProductCreate"
-              component={ProductCreateScreen}
-              options={{ title: 'Create Product' }}
-            />
+              <Stack.Screen
+                name="ProductCreate"
+                component={ProductCreateScreen}
+                options={{ title: 'Create Product' }}
+              />
 
-            <Stack.Screen
-              name="Register"
-              component={RegisterScreen}
-              options={{ title: 'Register' }}
-            />
+              <Stack.Screen
+                name="Register"
+                component={RegisterScreen}
+                options={{ title: 'Register' }}
+              />
 
-            <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{ title: 'Login' }}
-            />
+              <Stack.Screen
+                name="Login"
+                component={LoginScreen}
+                options={{ title: 'Login' }}
+              />
 
-          </Stack.Navigator>
-        </NavigationContainer>
+            </Stack.Navigator>
+          </NavigationContainer>
+        </AuthProvider>
       </SafeAreaProvider>
     </GluestackUIProvider>
   );
