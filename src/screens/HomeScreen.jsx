@@ -1,22 +1,12 @@
-
 import { useCallback, useMemo, useState } from 'react';
-import {
-    View,
-    Text,
-    TextInput,
-    Image,
-    Pressable,
-    FlatList,
-    ActivityIndicator,
-    StyleSheet,
-} from 'react-native';
+import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from '@react-native-vector-icons/ionicons';
-
 import { getProducts } from '../services/productService';
 import { useAuth } from '../context/AuthContext';
-import UserAvatar from '../components/UserAvatar';
 import { colors } from '../theme/colors';
+import ProductCard from '../components/ProductCard';
+import { getFavorites, addFavorite, removeFavorite, } from '../services/favoriteService';
 
 const CATEGORIES = ['All', 'Fashion', 'Technology', 'Sports'];
 
@@ -30,6 +20,8 @@ export default function HomeScreen({ navigation }) {
     const [sortOpen, setSortOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [favorites, setFavorites] = useState([]);
+    const [updatingFavorite, setUpdatingFavorite] = useState(null);
 
     useFocusEffect(
         useCallback(() => {
@@ -58,10 +50,26 @@ export default function HomeScreen({ navigation }) {
 
             loadProducts();
 
+            async function loadFavorites() {
+                if (!user) {
+                    setFavorites([]);
+                    return;
+                }
+
+                try {
+                    const data = await getFavorites(user.id);
+                    if (active) setFavorites(data);
+                } catch (err) {
+                    console.error('Failed to load favorites:', err);
+                }
+            }
+
+            loadFavorites();
+
             return () => {
                 active = false;
             };
-        }, [])
+        }, [user?.id])
     );
 
     const visibleProducts = useMemo(() => {
@@ -102,40 +110,41 @@ export default function HomeScreen({ navigation }) {
         });
     };
 
+    const toggleFavorite = async (productId) => {
+        if (!user) {
+            navigation.getParent()?.navigate('Login');
+            return;
+        }
+
+        if (updatingFavorite !== null) return;
+
+        const isFavorite = favorites.includes(productId);
+        setUpdatingFavorite(productId);
+
+        try {
+            if (isFavorite) {
+                await removeFavorite(productId, user.id);
+                setFavorites((current) =>
+                    current.filter((id) => id !== productId)
+                );
+            } else {
+                await addFavorite(productId, user.id);
+                setFavorites((current) => [...current, productId]);
+            }
+        } catch (err) {
+            console.error('Failed to update favorite:', err);
+        } finally {
+            setUpdatingFavorite(null);
+        }
+    };
+
     const renderProduct = ({ item }) => (
-        <Pressable
-            style={styles.card}
+        <ProductCard
+            product={item}
             onPress={() => openProductDetails(item.id)}
-        >
-            {item.images?.length > 0 ? (
-                <Image
-                    source={{ uri: item.images[0] }}
-                    style={styles.productImage}
-                />
-            ) : (
-                <View style={[styles.productImage, styles.placeholder]}>
-                    <Ionicons
-                        name="image-outline"
-                        size={30}
-                        color={colors.secondary}
-                    />
-                </View>
-            )}
-
-            <View style={styles.cardDetails}>
-                <Text style={styles.productTitle} numberOfLines={2}>
-                    {item.title}
-                </Text>
-
-                <Text style={styles.productCategory}>
-                    {item.category}
-                </Text>
-
-                <Text style={styles.productPrice}>
-                    €{Number(item.price).toFixed(2)}
-                </Text>
-            </View>
-        </Pressable>
+            isFavorite={favorites.includes(item.id)}
+            onToggleFavorite={() => toggleFavorite(item.id)}
+        />
     );
 
     return (
@@ -405,42 +414,6 @@ const styles = StyleSheet.create({
     productRow: {
         gap: 12,
         marginBottom: 14,
-    },
-    card: {
-        width: '48%',
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: 16,
-        overflow: 'hidden',
-        backgroundColor: colors.surface,
-    },
-    productImage: {
-        width: '100%',
-        aspectRatio: 1,
-        resizeMode: 'cover',
-    },
-    placeholder: {
-        backgroundColor: '#F5F5F5',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    cardDetails: {
-        padding: 11,
-        gap: 5,
-    },
-    productTitle: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: colors.text,
-    },
-    productCategory: {
-        fontSize: 12,
-        color: colors.secondary,
-    },
-    productPrice: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: colors.text,
     },
     loader: {
         marginVertical: 20,

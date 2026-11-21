@@ -16,6 +16,8 @@ import RegisterScreen from './screens/RegisterScreen';
 
 import LoginScreen from './screens/LoginScreen';
 
+import ProfileScreen from './screens/ProfileScreen';
+
 import { AuthProvider } from './context/AuthContext';
 
 import '@/global.css';
@@ -59,6 +61,12 @@ export default function App() {
                 name="Login"
                 component={LoginScreen}
                 options={{ title: 'Login' }}
+              />
+
+              <Stack.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{ title: 'My Profile' }}
               />
 
             </Stack.Navigator>

@@ -49,10 +49,7 @@ export default function MainTabs() {
         >
             <Tab.Screen name="Home" component={HomeScreen} />
             <Tab.Screen name="Favorites" component={FavoritesScreen} />
-            <Tab.Screen
-                name="MyListings"
-                component={MyListingsScreen}
-                options={{ title: 'My Listings' }}
+            <Tab.Screen name="MyListings" component={MyListingsScreen} options={{ title: 'My Listings' }}
             />
         </Tab.Navigator>
     );

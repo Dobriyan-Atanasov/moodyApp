@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../context/AuthContext';
 import UserAvatar from './UserAvatar';
+import AnimatedButton from './AnimatedButton';
 
 export default function AppHeader() {
     const navigation = useNavigation();
@@ -25,8 +26,9 @@ export default function AppHeader() {
                 <View style={styles.dot} />
             </View>
 
+
             <View style={styles.actions}>
-                <Pressable
+                <AnimatedButton
                     style={styles.addButton}
                     onPress={() =>
                         navigation.getParent()?.navigate(
@@ -35,10 +37,12 @@ export default function AppHeader() {
                     }
                 >
                     <Ionicons name="add" size={25} color="#171717" />
-                </Pressable>
+                </AnimatedButton>
 
-                <Pressable
-                    onPress={() => navigation.navigate('Profile')}
+                <AnimatedButton
+                    onPress={() =>
+                        navigation.getParent()?.navigate('Profile')
+                    }
                 >
                     {user ? (
                         <UserAvatar user={user} size={42} />
@@ -51,7 +55,7 @@ export default function AppHeader() {
                             />
                         </View>
                     )}
-                </Pressable>
+                </AnimatedButton>
             </View>
         </View>
     );
