@@ -43,6 +43,7 @@ export default function ProfileScreen({ navigation }) {
 
     return (
         <View style={{ flex: 1, padding: 24, gap: 16 }}>
+
             <Text style={{ fontSize: 26, fontWeight: '700' }}>
                 My Profile
             </Text>

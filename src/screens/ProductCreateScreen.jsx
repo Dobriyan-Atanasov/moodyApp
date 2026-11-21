@@ -12,18 +12,26 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import { useAuth } from '../context/AuthContext';
+import { createProduct } from '../services/productService';
+import { uploadProductPhoto, saveProductPhoto } from '../services/photoService';
 
 const MAX_PHOTOS = 5;
+const CATEGORIES = ['Fashion', 'Technology', 'Sports'];
 
-export default function ProductCreateScreen() {
+export default function ProductCreateScreen({ navigation }) {
+    const { user } = useAuth();
+    const [saving, setSaving] = useState(false);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
     const [category, setCategory] = useState('');
+    const [categoryOpen, setCategoryOpen] = useState(false);
     const [photos, setPhotos] = useState([]);
 
     const chooseFromGallery = async () => {
         const remaining = MAX_PHOTOS - photos.length;
+
 
         if (remaining === 0) {
             Alert.alert('Photo limit', 'You can add up to 5 photos.');
@@ -81,7 +89,8 @@ export default function ProductCreateScreen() {
         );
     };
 
-    const handleCreateProduct = () => {
+
+    const handleCreateProduct = async () => {
         if (!title.trim() || !price.trim() || !category.trim()) {
             Alert.alert('Missing information', 'Complete the required fields.');
             return;
@@ -94,16 +103,48 @@ export default function ProductCreateScreen() {
             return;
         }
 
-        if (photos.length === 0) {
-            Alert.alert('Missing photos', 'Add at least one product photo.');
+        if (!user) {
+            Alert.alert('Login required', 'Please log in first.');
             return;
         }
 
-        Alert.alert(
-            'Ready for upload',
-            'The product is valid. Supabase saving will be connected next.'
-        );
+        if (saving) return;
+
+        try {
+            setSaving(true);
+
+            const product = await createProduct(
+                title.trim(),
+                description.trim(),
+                numericPrice,
+                category.trim(),
+                user.id
+            );
+
+
+            console.log('Created product:', product);
+
+            for (let index = 0; index < photos.length; index++) {
+                const storagePath = await uploadProductPhoto(
+                    photos[index],
+                    product.id,
+                    user.id,
+                    index
+                );
+
+                await saveProductPhoto(product.id, storagePath, index);
+            }
+
+            Alert.alert('Success', 'Product and photos saved to Supabase.');
+            navigation.goBack();
+
+        } catch (error) {
+            Alert.alert('Error', error.message);
+        } finally {
+            setSaving(false);
+        }
     };
+
 
     return (
         <ScrollView
@@ -140,13 +181,56 @@ export default function ProductCreateScreen() {
                 onChangeText={setPrice}
             />
 
+
             <Text style={styles.label}>Category *</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Fashion, Technology or Sports"
-                value={category}
-                onChangeText={setCategory}
-            />
+
+            <Pressable
+                style={styles.categorySelector}
+                onPress={() => setCategoryOpen(!categoryOpen)}
+            >
+                <Text
+                    style={{
+                        color: category ? '#242424' : '#777B83',
+                        fontSize: 16,
+                    }}
+                >
+                    {category || 'Select a category'}
+                </Text>
+
+                <Ionicons
+                    name={categoryOpen ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color="#777B83"
+                />
+            </Pressable>
+
+            {categoryOpen && (
+                <View style={styles.categoryOptions}>
+                    {CATEGORIES.map((item) => (
+                        <Pressable
+                            key={item}
+                            style={styles.categoryOption}
+                            onPress={() => {
+                                setCategory(item);
+                                setCategoryOpen(false);
+                            }}
+                        >
+                            <Text style={styles.categoryOptionText}>
+                                {item}
+                            </Text>
+
+                            {category === item && (
+                                <Ionicons
+                                    name="checkmark"
+                                    size={20}
+                                    color="#92600C"
+                                />
+                            )}
+                        </Pressable>
+                    ))}
+                </View>
+            )}
+
 
             <Text style={styles.label}>
                 Product photos ({photos.length}/{MAX_PHOTOS})
@@ -286,5 +370,38 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '700',
+    },
+
+    categorySelector: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#E5E5E5',
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 18,
+    },
+    categoryOptions: {
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#E5E5E5',
+        borderRadius: 12,
+        marginTop: -10,
+        marginBottom: 18,
+        overflow: 'hidden',
+    },
+    categoryOption: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 15,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: '#E5E5E5',
+    },
+    categoryOptionText: {
+        fontSize: 16,
+        color: '#242424',
     },
 });

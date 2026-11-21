@@ -1,9 +1,10 @@
-
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@react-native-vector-icons/ionicons';
+
 import HomeScreen from '../screens/HomeScreen';
-import CategoriesScreen from '../screens/CategoriesScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import FavoritesScreen from '../screens/FavoritesScreen';
+import MyListingsScreen from '../screens/MyListingsScreen';
+import AppHeader from '../components/AppHeader';
 
 const Tab = createBottomTabNavigator();
 
@@ -12,27 +13,33 @@ export default function MainTabs() {
         <Tab.Navigator
             screenOptions={({ route }) => ({
                 headerShown: true,
+                header: () => <AppHeader />,
+
                 tabBarActiveTintColor: '#92600C',
-                tabBarInactiveTintColor: '#777B83',
+                tabBarInactiveTintColor: '#737373',
+
                 tabBarStyle: {
-                    backgroundColor: '#FAF8F5',
-                    borderTopColor: '#E8E3DC',
+                    backgroundColor: '#FFFFFF',
+                    borderTopColor: '#E5E5E5',
+                    borderTopWidth: 1,
+                    elevation: 0,
+                },
+
+                tabBarLabelStyle: {
+                    fontSize: 12,
+                    fontWeight: '600',
                 },
 
                 tabBarIcon: ({ focused, color, size }) => {
-                    let iconName;
-
-                    if (route.name === 'Home') {
-                        iconName = focused ? 'home' : 'home-outline';
-                    } else if (route.name === 'Categories') {
-                        iconName = focused ? 'grid' : 'grid-outline';
-                    } else if (route.name === 'Profile') {
-                        iconName = focused ? 'person' : 'person-outline';
-                    }
+                    const icons = {
+                        Home: focused ? 'home' : 'home-outline',
+                        Favorites: focused ? 'heart' : 'heart-outline',
+                        MyListings: focused ? 'albums' : 'albums-outline',
+                    };
 
                     return (
                         <Ionicons
-                            name={iconName}
+                            name={icons[route.name]}
                             size={size}
                             color={color}
                         />
@@ -40,22 +47,12 @@ export default function MainTabs() {
                 },
             })}
         >
+            <Tab.Screen name="Home" component={HomeScreen} />
+            <Tab.Screen name="Favorites" component={FavoritesScreen} />
             <Tab.Screen
-                name="Home"
-                component={HomeScreen}
-                options={{ title: 'Marketplace' }}
-            />
-
-            <Tab.Screen
-                name="Categories"
-                component={CategoriesScreen}
-                options={{ title: 'Categories' }}
-            />
-
-            <Tab.Screen
-                name="Profile"
-                component={ProfileScreen}
-                options={{ title: 'Profile' }}
+                name="MyListings"
+                component={MyListingsScreen}
+                options={{ title: 'My Listings' }}
             />
         </Tab.Navigator>
     );
