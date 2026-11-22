@@ -11,94 +11,134 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import DraggableGrid from 'react-native-draggable-grid';
+
 import { useAuth } from '../context/AuthContext';
 import { createProduct } from '../services/productService';
-import { uploadProductPhoto, saveProductPhoto } from '../services/photoService';
+import {
+    uploadProductPhoto,
+    saveProductPhoto,
+} from '../services/photoService';
+import { Spinner } from '@/components/ui/spinner';
+import Screen from '../components/Screen';
 
 const MAX_PHOTOS = 5;
 const CATEGORIES = ['Fashion', 'Technology', 'Sports'];
 
 export default function ProductCreateScreen({ navigation }) {
     const { user } = useAuth();
+
     const [saving, setSaving] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
+
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [price, setPrice] = useState('');
     const [category, setCategory] = useState('');
     const [categoryOpen, setCategoryOpen] = useState(false);
+
     const [photos, setPhotos] = useState([]);
 
     const chooseFromGallery = async () => {
+        if (saving) return;
+
         const remaining = MAX_PHOTOS - photos.length;
 
-
-        if (remaining === 0) {
+        if (remaining <= 0) {
             Alert.alert('Photo limit', 'You can add up to 5 photos.');
             return;
         }
 
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsMultipleSelection: true,
-            selectionLimit: remaining,
-            quality: 0.8,
-        });
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                allowsMultipleSelection: true,
+                selectionLimit: remaining,
+                quality: 0.8,
+            });
 
-        if (!result.canceled) {
-            setPhotos((current) => [
-                ...current,
-                ...result.assets.slice(0, MAX_PHOTOS - current.length),
-            ]);
+            if (!result.canceled) {
+                setPhotos(current => [
+                    ...current,
+                    ...result.assets
+                        .slice(0, MAX_PHOTOS - current.length)
+                        .map(asset => ({
+                            ...asset,
+                            key: `new-${asset.assetId || asset.uri}`,
+                        })),
+                ]);
+            }
+        } catch (error) {
+            Alert.alert('Error', error.message);
         }
     };
 
     const takePhoto = async () => {
+        if (saving) return;
+
         if (photos.length >= MAX_PHOTOS) {
             Alert.alert('Photo limit', 'You can add up to 5 photos.');
             return;
         }
 
-        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        try {
+            const permission =
+                await ImagePicker.requestCameraPermissionsAsync();
 
-        if (!permission.granted) {
-            Alert.alert(
-                'Camera permission',
-                'Camera access is required to take photos.'
-            );
-            return;
-        }
+            if (!permission.granted) {
+                Alert.alert(
+                    'Camera permission',
+                    'Camera access is required to take photos.'
+                );
+                return;
+            }
 
-        const result = await ImagePicker.launchCameraAsync({
-            mediaTypes: ['images'],
-            allowsEditing: false,
-            quality: 0.8,
-        });
+            const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ['images'],
+                allowsEditing: false,
+                quality: 0.8,
+            });
 
-        if (!result.canceled) {
-            setPhotos((current) => [
-                ...current,
-                ...result.assets.slice(0, MAX_PHOTOS - current.length),
-            ]);
+            if (!result.canceled) {
+                setPhotos(current => [
+                    ...current,
+                    ...result.assets
+                        .slice(0, MAX_PHOTOS - current.length)
+                        .map(asset => ({
+                            ...asset,
+                            key: `new-${asset.assetId || asset.uri}`,
+                        })),
+                ]);
+            }
+        } catch (error) {
+            Alert.alert('Error', error.message);
         }
     };
 
-    const removePhoto = (index) => {
-        setPhotos((current) =>
+    const removePhoto = index => {
+        if (saving) return;
+
+        setPhotos(current =>
             current.filter((_, photoIndex) => photoIndex !== index)
         );
     };
 
-
     const handleCreateProduct = async () => {
         if (!title.trim() || !price.trim() || !category.trim()) {
-            Alert.alert('Missing information', 'Complete the required fields.');
+            Alert.alert(
+                'Missing information',
+                'Complete the required fields.'
+            );
             return;
         }
 
         const numericPrice = Number(price);
 
         if (!Number.isFinite(numericPrice) || numericPrice < 0) {
-            Alert.alert('Invalid price', 'Enter a valid non-negative price.');
+            Alert.alert(
+                'Invalid price',
+                'Enter a valid non-negative price.'
+            );
             return;
         }
 
@@ -107,7 +147,7 @@ export default function ProductCreateScreen({ navigation }) {
             return;
         }
 
-        if (saving) return;
+        if (saving || isDragging) return;
 
         try {
             setSaving(true);
@@ -120,9 +160,8 @@ export default function ProductCreateScreen({ navigation }) {
                 user.id
             );
 
-
-            console.log('Created product:', product);
-
+            // Photos are already in the order selected by the user.
+            // The first photo receives display_order = 0.
             for (let index = 0; index < photos.length; index++) {
                 const storagePath = await uploadProductPhoto(
                     photos[index],
@@ -131,153 +170,267 @@ export default function ProductCreateScreen({ navigation }) {
                     index
                 );
 
-                await saveProductPhoto(product.id, storagePath, index);
+                await saveProductPhoto(
+                    product.id,
+                    storagePath,
+                    index
+                );
             }
 
-            Alert.alert('Success', 'Product and photos saved to Supabase.');
-            navigation.goBack();
+            Alert.alert(
+                'Success',
+                'Product and photos saved to Supabase.'
+            );
 
+            navigation.goBack();
         } catch (error) {
-            Alert.alert('Error', error.message);
+            Alert.alert(
+                'Save incomplete',
+                `${error.message}\n\nSome changes may already have been saved. Check your listings before trying again.`
+            );
         } finally {
             setSaving(false);
         }
     };
 
-
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled"
-        >
-            <Text style={styles.heading}>Create Product</Text>
-
-            <Text style={styles.label}>Product title *</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="e.g. Samsung Galaxy S25"
-                value={title}
-                onChangeText={setTitle}
-            />
-
-            <Text style={styles.label}>Description</Text>
-            <TextInput
-                style={[styles.input, styles.description]}
-                placeholder="Describe the condition and features"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                textAlignVertical="top"
-            />
-
-            <Text style={styles.label}>Price *</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="e.g. 750"
-                keyboardType="decimal-pad"
-                value={price}
-                onChangeText={setPrice}
-            />
-
-
-            <Text style={styles.label}>Category *</Text>
-
-            <Pressable
-                style={styles.categorySelector}
-                onPress={() => setCategoryOpen(!categoryOpen)}
+        <Screen>
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.content}
+                keyboardShouldPersistTaps="handled"
+                scrollEnabled={!isDragging}
             >
-                <Text
-                    style={{
-                        color: category ? '#242424' : '#777B83',
-                        fontSize: 16,
-                    }}
-                >
-                    {category || 'Select a category'}
+                <Text style={styles.heading}>
+                    Create Product
                 </Text>
 
-                <Ionicons
-                    name={categoryOpen ? 'chevron-up' : 'chevron-down'}
-                    size={20}
-                    color="#777B83"
+                <Text style={styles.label}>
+                    Product title *
+                </Text>
+
+                <TextInput
+                    style={styles.input}
+                    placeholder="e.g. Samsung Galaxy S25"
+                    value={title}
+                    onChangeText={setTitle}
+                    editable={!saving}
                 />
-            </Pressable>
 
-            {categoryOpen && (
-                <View style={styles.categoryOptions}>
-                    {CATEGORIES.map((item) => (
-                        <Pressable
-                            key={item}
-                            style={styles.categoryOption}
-                            onPress={() => {
-                                setCategory(item);
-                                setCategoryOpen(false);
-                            }}
-                        >
-                            <Text style={styles.categoryOptionText}>
-                                {item}
-                            </Text>
+                <Text style={styles.label}>
+                    Description
+                </Text>
 
-                            {category === item && (
-                                <Ionicons
-                                    name="checkmark"
-                                    size={20}
-                                    color="#92600C"
-                                />
-                            )}
-                        </Pressable>
-                    ))}
-                </View>
-            )}
+                <TextInput
+                    style={[styles.input, styles.description]}
+                    placeholder="Describe the condition and features"
+                    value={description}
+                    onChangeText={setDescription}
+                    multiline
+                    textAlignVertical="top"
+                    editable={!saving}
+                />
 
+                <Text style={styles.label}>
+                    Price *
+                </Text>
 
-            <Text style={styles.label}>
-                Product photos ({photos.length}/{MAX_PHOTOS})
-            </Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="e.g. 750"
+                    keyboardType="decimal-pad"
+                    value={price}
+                    onChangeText={setPrice}
+                    editable={!saving}
+                />
 
-            <View style={styles.buttonRow}>
-                <Pressable
-                    style={styles.photoButton}
-                    onPress={chooseFromGallery}
-                >
-                    <Ionicons name="images-outline" size={24} color="#92600C" />
-                    <Text style={styles.photoButtonText}>Gallery</Text>
-                </Pressable>
+                <Text style={styles.label}>
+                    Category *
+                </Text>
 
                 <Pressable
-                    style={styles.photoButton}
-                    onPress={takePhoto}
+                    style={styles.categorySelector}
+                    onPress={() => setCategoryOpen(!categoryOpen)}
+                    disabled={saving}
                 >
-                    <Ionicons name="camera-outline" size={24} color="#92600C" />
-                    <Text style={styles.photoButtonText}>Camera</Text>
-                </Pressable>
-            </View>
+                    <Text
+                        style={{
+                            color: category ? '#242424' : '#777B83',
+                            fontSize: 16,
+                        }}
+                    >
+                        {category || 'Select a category'}
+                    </Text>
 
-            <View style={styles.photoGrid}>
-                {photos.map((photo, index) => (
-                    <View key={`${photo.uri}-${index}`} style={styles.photoItem}>
-                        <Image
-                            source={{ uri: photo.uri }}
-                            style={styles.photo}
+                    <Ionicons
+                        name={
+                            categoryOpen
+                                ? 'chevron-up'
+                                : 'chevron-down'
+                        }
+                        size={20}
+                        color="#777B83"
+                    />
+                </Pressable>
+
+                {categoryOpen && (
+                    <View style={styles.categoryOptions}>
+                        {CATEGORIES.map(item => (
+                            <Pressable
+                                key={item}
+                                style={styles.categoryOption}
+                                onPress={() => {
+                                    setCategory(item);
+                                    setCategoryOpen(false);
+                                }}
+                                disabled={saving}
+                            >
+                                <Text style={styles.categoryOptionText}>
+                                    {item}
+                                </Text>
+
+                                {category === item && (
+                                    <Ionicons
+                                        name="checkmark"
+                                        size={20}
+                                        color="#92600C"
+                                    />
+                                )}
+                            </Pressable>
+                        ))}
+                    </View>
+                )}
+
+                <Text style={styles.label}>
+                    Product photos ({photos.length}/{MAX_PHOTOS})
+                </Text>
+
+                <View style={styles.buttonRow}>
+                    <Pressable
+                        style={styles.photoButton}
+                        onPress={chooseFromGallery}
+                        disabled={saving}
+                    >
+                        <Ionicons
+                            name="images-outline"
+                            size={24}
+                            color="#92600C"
                         />
 
-                        <Pressable
-                            style={styles.removeButton}
-                            onPress={() => removePhoto(index)}
-                        >
-                            <Ionicons name="close" size={18} color="#FFFFFF" />
-                        </Pressable>
-                    </View>
-                ))}
-            </View>
+                        <Text style={styles.photoButtonText}>
+                            Gallery
+                        </Text>
+                    </Pressable>
 
-            <Pressable
-                style={styles.submitButton}
-                onPress={handleCreateProduct}
-            >
-                <Text style={styles.submitText}>Create Product</Text>
-            </Pressable>
-        </ScrollView>
+                    <Pressable
+                        style={styles.photoButton}
+                        onPress={takePhoto}
+                        disabled={saving}
+                    >
+                        <Ionicons
+                            name="camera-outline"
+                            size={24}
+                            color="#92600C"
+                        />
+
+                        <Text style={styles.photoButtonText}>
+                            Camera
+                        </Text>
+                    </Pressable>
+                </View>
+
+                <Text style={styles.photoHint}>
+                    Hold and drag to reorder photos.
+                    The first photo is your cover.
+                </Text>
+
+                <DraggableGrid
+                    numColumns={3}
+                    data={photos}
+                    onDragStart={() => setIsDragging(true)}
+                    onDragRelease={data => {
+                        if (!saving) {
+                            setPhotos(data);
+                        }
+
+                        setIsDragging(false);
+                    }}
+                    renderItem={item => {
+                        const index = photos.findIndex(
+                            photo => photo.key === item.key
+                        );
+
+                        const isCover = index === 0;
+
+                        return (
+                            <View
+                                style={[
+                                    styles.photoItem,
+                                    isCover && styles.coverPhoto,
+                                ]}
+                            >
+                                <Image
+                                    source={{ uri: item.uri }}
+                                    style={styles.photo}
+                                />
+
+                                {isCover && (
+                                    <View style={styles.coverBadge}>
+                                        <Ionicons
+                                            name="star"
+                                            size={12}
+                                            color="#FFFFFF"
+                                        />
+
+                                        <Text style={styles.coverText}>
+                                            Cover
+                                        </Text>
+                                    </View>
+                                )}
+
+                                <Pressable
+                                    style={styles.removeButton}
+                                    onPress={() => removePhoto(index)}
+                                    disabled={saving}
+                                >
+                                    <Ionicons
+                                        name="close"
+                                        size={18}
+                                        color="#FFFFFF"
+                                    />
+                                </Pressable>
+                            </View>
+                        );
+                    }}
+                />
+
+                <Pressable
+                    style={[
+                        styles.submitButton,
+                        saving && styles.disabledButton,
+                    ]}
+                    onPress={handleCreateProduct}
+                    disabled={saving || isDragging}
+                >
+                    {saving ? (
+                        <View style={styles.loadingRow}>
+                            <Spinner
+                                size="small"
+                                color="#FFFFFF"
+                            />
+
+                            <Text style={styles.submitText}>
+                                Creating product...
+                            </Text>
+                        </View>
+                    ) : (
+                        <Text style={styles.submitText}>
+                            Create Product
+                        </Text>
+                    )}
+                </Pressable>
+            </ScrollView>
+        </Screen>
     );
 }
 
@@ -336,12 +489,6 @@ const styles = StyleSheet.create({
         color: '#92600C',
         fontWeight: '600',
     },
-    photoGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 10,
-        marginBottom: 24,
-    },
     photoItem: {
         width: 95,
         height: 95,
@@ -365,12 +512,14 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         alignItems: 'center',
     },
+    disabledButton: {
+        opacity: 0.7,
+    },
     submitText: {
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '700',
     },
-
     categorySelector: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -402,5 +551,40 @@ const styles = StyleSheet.create({
     categoryOptionText: {
         fontSize: 16,
         color: '#242424',
+    },
+    loadingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+    },
+    photoHint: {
+        fontSize: 13,
+        color: '#777B83',
+        marginBottom: 12,
+    },
+    coverPhoto: {
+        borderWidth: 3,
+        borderColor: '#92600C',
+        borderRadius: 12,
+    },
+    coverBadge: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#92600C',
+        paddingVertical: 4,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 4,
+        borderBottomLeftRadius: 8,
+        borderBottomRightRadius: 8,
+    },
+    coverText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '700',
     },
 });

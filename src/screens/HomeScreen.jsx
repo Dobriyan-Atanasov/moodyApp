@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, FlatList, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { getProducts } from '../services/productService';
@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { colors } from '../theme/colors';
 import ProductCard from '../components/ProductCard';
 import { getFavorites, addFavorite, removeFavorite, } from '../services/favoriteService';
+import { Spinner } from '@/components/ui/spinner';
 
 const CATEGORIES = ['All', 'Fashion', 'Technology', 'Sports'];
 
@@ -264,11 +265,9 @@ export default function HomeScreen({ navigation }) {
                         )}
 
                         {loading && (
-                            <ActivityIndicator
-                                size="large"
-                                color={colors.accent}
-                                style={styles.loader}
-                            />
+                            <View style={styles.loader}>
+                                <Spinner size="large" color={colors.accent} />
+                            </View>
                         )}
 
                         {error && (

@@ -3,7 +3,6 @@ import {
     View,
     Text,
     FlatList,
-    ActivityIndicator,
     Pressable,
     StyleSheet,
 } from 'react-native';
@@ -13,6 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import { getMyProducts } from '../services/productService';
 import ProductCard from '../components/ProductCard';
 import { colors } from '../theme/colors';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function MyListingsScreen({ navigation }) {
     const { user } = useAuth();
@@ -109,11 +109,9 @@ export default function MyListingsScreen({ navigation }) {
                         </Text>
 
                         {loading && (
-                            <ActivityIndicator
-                                size="large"
-                                color={colors.accent}
-                                style={styles.loader}
-                            />
+                            <View style={styles.loader}>
+                                <Spinner size="large" color={colors.accent} />
+                            </View>
                         )}
 
                         {error && (

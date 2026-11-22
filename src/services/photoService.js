@@ -132,3 +132,38 @@ export async function deletePhotoFromStorage(storagePath) {
         throw new Error(data.message || data.error || 'Failed to delete photo from storage.');
     }
 }
+
+
+export async function updateProductPhotoOrder(photoId, displayOrder) {
+    const token = await getAccessToken();
+
+    if (!token) {
+        throw new Error('You must be logged in to reorder photos.');
+    }
+
+    const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/product_images?id=eq.${encodeURIComponent(photoId)}`,
+        {
+            method: 'PATCH',
+            headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                Prefer: 'return=representation',
+            },
+            body: JSON.stringify({ display_order: displayOrder }),
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || 'Failed to reorder photo.');
+    }
+
+    if (!data.length) {
+        throw new Error('Photo not found or update not permitted.');
+    }
+
+    return data[0];
+}

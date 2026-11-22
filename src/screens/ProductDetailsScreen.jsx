@@ -5,7 +5,6 @@ import {
     Image,
     FlatList,
     ScrollView,
-    ActivityIndicator,
     StyleSheet,
     useWindowDimensions,
     Pressable,
@@ -18,6 +17,8 @@ import { getProductById, deleteProduct } from '../services/productService';
 import { colors } from '../theme/colors';
 import Screen from '../components/Screen';
 import { useAuth } from '../context/AuthContext';
+import { deletePhotoFromStorage } from '../services/photoService';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function ProductDetailsScreen({ route, navigation }) {
     const { productId } = route.params;
@@ -85,13 +86,35 @@ export default function ProductDetailsScreen({ route, navigation }) {
         );
     };
 
+
     const confirmDeleteProduct = async () => {
         if (!product || !user || deleting) return;
 
         try {
             setDeleting(true);
 
+            // Remember the image paths before deleting the product.
+            const storagePaths = (product.product_images || [])
+                .map(image => image.storage_path);
+
+            // Delete the product and cascade its related database records.
             await deleteProduct(product.id, user.id);
+
+            // Delete the actual image files from Supabase Storage.
+            const results = await Promise.allSettled(
+                storagePaths.map(path => deletePhotoFromStorage(path))
+            );
+
+            const failedCount = results.filter(
+                result => result.status === 'rejected'
+            ).length;
+
+            if (failedCount > 0) {
+                Alert.alert(
+                    'Listing deleted',
+                    `The listing was deleted, but ${failedCount} photo(s) could not be removed from Storage.`
+                );
+            }
 
             navigation.goBack();
         } catch (error) {
@@ -101,11 +124,10 @@ export default function ProductDetailsScreen({ route, navigation }) {
         }
     };
 
-
     if (loading) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color={colors.accent} />
+                <Spinner size="large" color={colors.accent} />
             </View>
         );
     }

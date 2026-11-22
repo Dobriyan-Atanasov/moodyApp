@@ -3,7 +3,6 @@ import {
     View,
     Text,
     FlatList,
-    ActivityIndicator,
     StyleSheet,
     Pressable,
 } from 'react-native';
@@ -17,6 +16,7 @@ import {
 } from '../services/favoriteService';
 import ProductCard from '../components/ProductCard';
 import { colors } from '../theme/colors';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function FavoritesScreen({ navigation }) {
     const { user } = useAuth();
@@ -132,11 +132,9 @@ export default function FavoritesScreen({ navigation }) {
                         </Text>
 
                         {loading && (
-                            <ActivityIndicator
-                                size="large"
-                                color={colors.accent}
-                                style={styles.loader}
-                            />
+                            <View style={styles.loader}>
+                                <Spinner size="large" color={colors.accent} />
+                            </View>
                         )}
 
                         {error && (
