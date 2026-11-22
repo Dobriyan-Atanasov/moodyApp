@@ -1,4 +1,3 @@
-
 import { File } from 'expo-file-system';
 import { fetch as expoFetch } from 'expo/fetch';
 import { getAccessToken } from './authService';
@@ -71,5 +70,65 @@ export async function saveProductPhoto(productId, storagePath, displayOrder) {
     if (!response.ok) {
         const data = await response.json();
         throw new Error(data.message || 'Failed to save product photo.');
+    }
+}
+
+
+export async function deleteProductPhoto(photoId) {
+    const token = await getAccessToken();
+
+    if (!token) {
+        throw new Error('You must be logged in to delete photos.');
+    }
+
+    const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/product_images?id=eq.${encodeURIComponent(photoId)}`,
+        {
+            method: 'DELETE',
+            headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${token}`,
+                Prefer: 'return=representation',
+            },
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete photo record.');
+    }
+
+    if (data.length === 0) {
+        throw new Error('Photo not found or deletion is not permitted.');
+    }
+
+    return data[0];
+}
+
+export async function deletePhotoFromStorage(storagePath) {
+    const token = await getAccessToken();
+
+    if (!token) {
+        throw new Error('You must be logged in to delete photos.');
+    }
+
+    const response = await fetch(
+        `${SUPABASE_URL}/storage/v1/object/product-images/${storagePath
+            .split('/')
+            .map(encodeURIComponent)
+            .join('/')}`,
+        {
+            method: 'DELETE',
+            headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
+
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || data.error || 'Failed to delete photo from storage.');
     }
 }

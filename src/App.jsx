@@ -20,6 +20,8 @@ import ProfileScreen from './screens/ProfileScreen';
 
 import { AuthProvider } from './context/AuthContext';
 
+import ProductEditScreen from './screens/ProductEditScreen';
+
 import '@/global.css';
 
 const Stack = createNativeStackNavigator();
@@ -67,6 +69,12 @@ export default function App() {
                 name="Profile"
                 component={ProfileScreen}
                 options={{ title: 'My Profile' }}
+              />
+
+              <Stack.Screen
+                name="ProductEdit"
+                component={ProductEditScreen}
+                options={{ title: 'Edit Product' }}
               />
 
             </Stack.Navigator>
