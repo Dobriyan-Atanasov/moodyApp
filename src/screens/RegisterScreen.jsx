@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { registerUser } from '../services/authService';
+import Screen from '../components/Screen';
 
 export default function RegisterScreen({ navigation }) {
     const [firstName, setFirstName] = useState('');
@@ -80,95 +81,97 @@ export default function RegisterScreen({ navigation }) {
     };
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled"
-        >
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>
-                Join MoodyApp and start selling.
-            </Text>
-
-            <Text style={styles.label}>First Name</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="First name"
-                value={firstName}
-                onChangeText={setFirstName}
-                autoComplete="given-name"
-            />
-
-            <Text style={styles.label}>Last Name</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Last name"
-                value={lastName}
-                onChangeText={setLastName}
-                autoComplete="family-name"
-            />
-
-            <Text style={styles.label}>Nickname</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="techmaster"
-                autoCapitalize="none"
-                autoCorrect={false}
-                maxLength={20}
-                value={nickname}
-                onChangeText={setNickname}
-            />
-
-            <Text style={styles.hint}>
-                Your public name: @{nickname.trim().toLowerCase() || 'nickname'}
-            </Text>
-
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Email address"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-                value={email}
-                onChangeText={setEmail}
-            />
-
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                secureTextEntry
-                autoComplete="new-password"
-                value={password}
-                onChangeText={setPassword}
-            />
-
-            <Text style={styles.label}>Confirm Password</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Repeat password"
-                secureTextEntry
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-            />
-
-            <Pressable
-                style={[styles.button, loading && styles.disabled]}
-                onPress={handleRegister}
-                disabled={loading}
+        <Screen>
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={styles.content}
+                keyboardShouldPersistTaps="handled"
             >
-                <Text style={styles.buttonText}>
-                    {loading ? 'Creating account...' : 'Register'}
+                <Text style={styles.title}>Create Account</Text>
+                <Text style={styles.subtitle}>
+                    Join MoodyApp and start selling.
                 </Text>
-            </Pressable>
 
-            <Pressable onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.link}>
-                    Already have an account? Login
+                <Text style={styles.label}>First Name</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="First name"
+                    value={firstName}
+                    onChangeText={setFirstName}
+                    autoComplete="given-name"
+                />
+
+                <Text style={styles.label}>Last Name</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Last name"
+                    value={lastName}
+                    onChangeText={setLastName}
+                    autoComplete="family-name"
+                />
+
+                <Text style={styles.label}>Nickname</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="techmaster"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    maxLength={20}
+                    value={nickname}
+                    onChangeText={setNickname}
+                />
+
+                <Text style={styles.hint}>
+                    Your public name: @{nickname.trim().toLowerCase() || 'nickname'}
                 </Text>
-            </Pressable>
-        </ScrollView>
+
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Email address"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    value={email}
+                    onChangeText={setEmail}
+                />
+
+                <Text style={styles.label}>Password</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    secureTextEntry
+                    autoComplete="new-password"
+                    value={password}
+                    onChangeText={setPassword}
+                />
+
+                <Text style={styles.label}>Confirm Password</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Repeat password"
+                    secureTextEntry
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                />
+
+                <Pressable
+                    style={[styles.button, loading && styles.disabled]}
+                    onPress={handleRegister}
+                    disabled={loading}
+                >
+                    <Text style={styles.buttonText}>
+                        {loading ? 'Creating account...' : 'Register'}
+                    </Text>
+                </Pressable>
+
+                <Pressable onPress={() => navigation.navigate('Login')}>
+                    <Text style={styles.link}>
+                        Already have an account? Login
+                    </Text>
+                </Pressable>
+            </ScrollView>
+        </Screen>
     );
 }
 
