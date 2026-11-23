@@ -10,6 +10,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.dobriyan.moodyapp",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -25,6 +26,11 @@
       "expo-status-bar",
       "expo-font",
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a952cd80-b5bd-49b8-860c-c8fd8dbfa288"
+      }
+    }
   }
 }
