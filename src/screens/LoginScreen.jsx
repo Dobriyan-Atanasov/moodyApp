@@ -1,15 +1,17 @@
-
 import { useState } from 'react';
 import {
-    View,
     Text,
     TextInput,
     Pressable,
     Alert,
     StyleSheet,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
 } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
+import Screen from '../components/Screen';
 
 export default function LoginScreen({ navigation }) {
     const { login } = useAuth();
@@ -39,42 +41,56 @@ export default function LoginScreen({ navigation }) {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Login</Text>
+        <Screen>
 
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                autoCapitalize="none"
-                keyboardType="email-address"
-                value={email}
-                onChangeText={setEmail}
-            />
-
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-            />
-
-            <Pressable
-                style={[styles.button, loading && { opacity: 0.6 }]}
-                onPress={handleLogin}
-                disabled={loading}
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <Text style={styles.buttonText}>
-                    {loading ? 'Logging in...' : 'Login'}
-                </Text>
-            </Pressable>
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={styles.container}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                    automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+                >
+                    <Text style={styles.title}>Login</Text>
 
-            <Pressable onPress={() => navigation.navigate('Register')}>
-                <Text style={styles.link}>
-                    Don't have an account? Register
-                </Text>
-            </Pressable>
-        </View>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Email"
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        value={email}
+                        onChangeText={setEmail}
+                    />
+
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Password"
+                        secureTextEntry
+                        value={password}
+                        onChangeText={setPassword}
+                    />
+
+                    <Pressable
+                        style={[styles.button, loading && { opacity: 0.6 }]}
+                        onPress={handleLogin}
+                        disabled={loading}
+                    >
+                        <Text style={styles.buttonText}>
+                            {loading ? 'Logging in...' : 'Login'}
+                        </Text>
+                    </Pressable>
+
+                    <Pressable onPress={() => navigation.navigate('Register')}>
+                        <Text style={styles.link}>
+                            Don't have an account? Register
+                        </Text>
+                    </Pressable>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </Screen>
     );
 }
 

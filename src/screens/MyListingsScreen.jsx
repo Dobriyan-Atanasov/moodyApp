@@ -20,6 +20,23 @@ export default function MyListingsScreen({ navigation }) {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const handleRefresh = async () => {
+        if (!user || refreshing) return;
+
+        setRefreshing(true);
+
+        try {
+            const data = await getMyProducts(user.id);
+            setProducts(data);
+            setError(null);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     useFocusEffect(
         useCallback(() => {
@@ -96,6 +113,8 @@ export default function MyListingsScreen({ navigation }) {
         <View style={styles.container}>
             <FlatList
                 data={products}
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
                 keyExtractor={(item) => String(item.id)}
                 numColumns={2}
                 columnWrapperStyle={styles.productRow}

@@ -19,6 +19,7 @@ import Screen from '../components/Screen';
 import { useAuth } from '../context/AuthContext';
 import { deletePhotoFromStorage } from '../services/photoService';
 import { Spinner } from '@/components/ui/spinner';
+import { RefreshControl } from 'react-native';
 
 export default function ProductDetailsScreen({ route, navigation }) {
     const { productId } = route.params;
@@ -30,6 +31,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
     const [imageIndex, setImageIndex] = useState(0);
     const { user } = useAuth();
     const [deleting, setDeleting] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     useFocusEffect(
         useCallback(() => {
@@ -65,6 +67,23 @@ export default function ProductDetailsScreen({ route, navigation }) {
         }, [productId])
     );
 
+    const handleRefresh = async () => {
+        if (refreshing) return;
+
+        setRefreshing(true);
+
+        try {
+            const data = await getProductById(productId);
+
+            setProduct(data);
+            setImageIndex(0);
+            setError(null);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     const handleDeleteProduct = () => {
         if (!product || !user || deleting) return;
@@ -146,7 +165,15 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
     return (
         <Screen style={styles.container}>
-            <ScrollView>
+            <ScrollView contentContainerStyle={{ paddingTop: 20 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        colors={[colors.accent]}
+                        tintColor={colors.accent} />
+                }
+            >
                 <View>
                     {product.images.length > 0 ? (
                         <>
@@ -261,7 +288,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
                 </View>
             </ScrollView>
-        </Screen>
+        </Screen >
     );
 }
 

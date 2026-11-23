@@ -25,6 +25,33 @@ export default function FavoritesScreen({ navigation }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [updatingFavorite, setUpdatingFavorite] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const handleRefresh = async () => {
+        if (!user || refreshing) return;
+
+        setRefreshing(true);
+
+        try {
+            const [allProducts, favoriteIds] = await Promise.all([
+                getProducts(),
+                getFavorites(user.id),
+            ]);
+
+            setProducts(
+                allProducts.filter((product) =>
+                    favoriteIds.includes(product.id)
+                )
+            );
+
+            setError(null);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
 
     useFocusEffect(
         useCallback(() => {
@@ -120,6 +147,8 @@ export default function FavoritesScreen({ navigation }) {
         <View style={styles.container}>
             <FlatList
                 data={products}
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
                 keyExtractor={(item) => String(item.id)}
                 numColumns={2}
                 columnWrapperStyle={styles.productRow}

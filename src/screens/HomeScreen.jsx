@@ -23,6 +23,28 @@ export default function HomeScreen({ navigation }) {
     const [error, setError] = useState(null);
     const [favorites, setFavorites] = useState([]);
     const [updatingFavorite, setUpdatingFavorite] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const handleRefresh = async () => {
+        if (refreshing) return;
+
+        setRefreshing(true);
+
+        try {
+            const [productsData, favoritesData] = await Promise.all([
+                getProducts(),
+                user ? getFavorites(user.id) : Promise.resolve([]),
+            ]);
+
+            setProducts(productsData);
+            setFavorites(favoritesData);
+            setError(null);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     useFocusEffect(
         useCallback(() => {
@@ -152,6 +174,8 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.container}>
             <FlatList
                 data={visibleProducts}
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
                 keyExtractor={(item) => String(item.id)}
                 renderItem={renderProduct}
                 numColumns={2}
